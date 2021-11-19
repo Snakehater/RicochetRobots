@@ -26,7 +26,11 @@ public:
 			this->animations.erase(animations.begin());
 		return true;
 	}	
-
+	void set_ticks(float ticks) {
+		for (long unsigned int i = 0; i < animations.size(); i++) {
+			animations[i]->set_ticks(ticks);
+		}
+	}
 private:
 	std::vector<Animation*> animations;
 

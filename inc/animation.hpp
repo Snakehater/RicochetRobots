@@ -12,13 +12,34 @@ struct DEFAULTS{
 class Animation {
 public:
 	Animation(){ }; // Null constructor
-	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, glm::vec3 vDeltaRotIn, float fDeltaRotIn, float steps_in=DEFAULT.steps) {
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn) {
+		this->vDeltaPos = 	vDeltaPosIn;
+		this->keepRot	=	true;
+		this->tickSteps = 	DEFAULT.steps;
+		this->targetMesh=	mesh_in;
+		this->progress  =	0.0f;
+	}
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaRotIn, float fDeltaRotIn) {
+		this->vDeltaPos = 	glm::vec3(0.0f, 0.0f, 0.0f);
+		this->vDeltaRot = 	vDeltaRotIn;
+		this->fDeltaRot = 	fDeltaRotIn;
+		this->tickSteps = 	DEFAULT.steps;
+		this->targetMesh=	mesh_in;
+		this->progress  =	0.0f;
+		this->keepRot	=	false;
+	}
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, glm::vec3 vDeltaRotIn, float fDeltaRotIn) {
 		this->vDeltaPos = 	vDeltaPosIn;
 		this->vDeltaRot = 	vDeltaRotIn;
 		this->fDeltaRot = 	fDeltaRotIn;
-		this->tickSteps = 	steps_in;
+		this->tickSteps = 	DEFAULT.steps;
 		this->targetMesh=	mesh_in;
 		this->progress  =	0.0f;
+		this->keepRot	=	false;
+	}
+	
+	void set_ticks(float ticks_in) {
+		this->tickSteps = ticks_in;
 	}
 
 	bool tick() {
@@ -35,8 +56,15 @@ public:
 	}
 	int state = 0;
 	void init() {
+		if(this->keepRot) {
+			this->vDeltaRot = this->targetMesh->get_rotation_vec();
+			this->fDeltaRot = 0;
+		}
+
+		this->targetMesh->set_rotation_vec(this->vDeltaRot);
+
 		this->vStartPos  = this->targetMesh->get_position();
-		this->vStartRot  = this->targetMesh->get_rotation_vec();
+//		this->vStartRot  = this->targetMesh->get_rotation_vec();
 		this->fStartRot  = this->targetMesh->rotation_degree;
 		this->state = 1;
 	}
@@ -45,6 +73,7 @@ private:
 	Mesh* targetMesh;
 	float tickSteps;
 	float progress;
+	bool keepRot;
 	
 	glm::vec3 vStartPos;
 	glm::vec3 vStartRot;
@@ -56,7 +85,7 @@ private:
 
 	void apply_animation() {
 		this->targetMesh->set_position(this->vStartPos + (this->vDeltaPos*(this->progress)));
-		this->targetMesh->set_rotation_vec(this->vStartRot + (this->vDeltaRot*(this->progress)));
+//		this->targetMesh->set_rotation_vec(this->vStartRot + (this->vDeltaRot*(this->progress)));
 		this->targetMesh->rotation_degree = this->fStartRot + (this->fDeltaRot*(this->progress));
 	}
 
