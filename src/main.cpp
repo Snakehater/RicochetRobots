@@ -117,7 +117,7 @@ int main() {
 			for (int j = 0; j < board_map_size; j++) {
 				Mesh mesh = *mesh_types[board_map[i][j]];
 				mesh.set_position((float)j-(board_map_size/2), 0.0f, (float)i-(board_map_size/2));
-				mesh.set_rotation_vec(0.0f, 1.0f, 0.0f);
+				mesh.set_rotation_vec(0.0f, -1.0f, 0.0f);
 				map_cubes[cnt] = mesh;
 				cnt++;
 			}
@@ -126,7 +126,16 @@ int main() {
 
 	// create animation object to handle animations
 	Mesh* temp_mesh = &map_cubes[22];
-	Animation animation(temp_mesh, temp_mesh->get_position() + glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90);
+	Animation animation(temp_mesh, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 90, 0.01f);
+
+	Animation animation2(temp_mesh, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0, 0.01f);
+	Animation animation3(temp_mesh, glm::vec3(0.0f, -6.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -90, 0.01f);
+	
+	AnimationSeq animationSeq;
+	animationSeq.add_animation(&animation);
+	animationSeq.add_animation(&animation2);
+	animationSeq.add_animation(&animation3);
+	
 
 	//float* vertices = &mesh.vertex_array_object[0];
 	float vertices[vertices_size] = { };
@@ -242,7 +251,7 @@ int main() {
 		glm::mat4 view = camera.GetViewMatrix(); 
 		ourShader.setMat4( "view", view );
 		
-		animation.tick();
+		animationSeq.tick();
 
 		// render boxes
 		glBindVertexArray( VAO );

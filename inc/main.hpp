@@ -20,6 +20,7 @@
 #include "camera.hpp"
 #include "mesh.hpp"
 #include "animation.hpp"
+#include "animation_sequence.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION // only import relevant stuff from stb_image.h
 #include "stb_image.h"
