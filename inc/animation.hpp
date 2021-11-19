@@ -69,6 +69,10 @@ public:
 		this->state = 1;
 	}
 
+	void change_mesh(Mesh* new_mesh) {
+		this->targetMesh = new_mesh;
+	}
+
 private:
 	Mesh* targetMesh;
 	float tickSteps;

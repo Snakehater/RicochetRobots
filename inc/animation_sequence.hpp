@@ -9,30 +9,30 @@
 class AnimationSeq {
 public:
 	AnimationSeq(){ }; // Null constructor
-	AnimationSeq( std::vector<Animation*> animations_in) {
+	AnimationSeq( std::vector<Animation> animations_in) {
 		this->animations = animations_in;
 	}
 
-	void add_animation(Animation* animation_in) {
+	void add_animation(Animation animation_in) {
 		this->animations.push_back(animation_in);
 	}
 
 	bool tick() {
-		if (this->animations[0]->state == 0)
-			this->animations[0]->init();
+		if (this->animations[0].state == 0)
+			this->animations[0].init();
 		if (this->animations.size() == 0)
 			return false;
-		if (!this->animations[0]->tick())
+		if (!this->animations[0].tick())
 			this->animations.erase(animations.begin());
 		return true;
-	}	
+	}
 	void set_ticks(float ticks) {
 		for (long unsigned int i = 0; i < animations.size(); i++) {
-			animations[i]->set_ticks(ticks);
+			animations[i].set_ticks(ticks);
 		}
 	}
 private:
-	std::vector<Animation*> animations;
+	std::vector<Animation> animations;
 
 };
 #endif
