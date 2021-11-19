@@ -124,6 +124,9 @@ int main() {
 		}
 	}
 
+	// create animation object to handle animations
+	Mesh* temp_mesh = &map_cubes[22];
+	Animation animation(temp_mesh, temp_mesh->get_position() + glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90);
 
 	//float* vertices = &mesh.vertex_array_object[0];
 	float vertices[vertices_size] = { };
@@ -239,6 +242,8 @@ int main() {
 		glm::mat4 view = camera.GetViewMatrix(); 
 		ourShader.setMat4( "view", view );
 		
+		animation.tick();
+
 		// render boxes
 		glBindVertexArray( VAO );
 		for (int i = 0; i < board_map_size*board_map_size; i++) {

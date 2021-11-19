@@ -54,11 +54,17 @@ public:
 	int vert_num(){
 		return this->num_of_vertices;
 	}
+	void set_position(glm::vec3 vec_in) {
+		this->position_vec = vec_in;
+	}
 	void set_position(float x, float y, float z) {
 		this->position_vec = glm::vec3(x, y, z);
 	}
 	glm::vec3 get_position() {
 		return this->position_vec;
+	}
+	void set_rotation_vec(glm::vec3 vec_in) {
+		this->rotation_vec = vec_in;
 	}
 	void set_rotation_vec(float x, float y, float z) {
 		this->rotation_vec = glm::vec3(x, y, z);
