@@ -84,7 +84,7 @@ private:
 	float	  fDeltaRot;
 
 	void apply_animation() {
-		this->targetMesh->set_position(this->vStartPos + (this->vDeltaPos*(this->progress)));
+		this->targetMesh->set_position(this->vStartPos + (this->vDeltaPos*easeInOutBack(this->progress, 0, 1, 1)));
 //		this->targetMesh->set_rotation_vec(this->vStartRot + (this->vDeltaRot*(this->progress)));
 		this->targetMesh->rotation_degree = this->fStartRot + (this->fDeltaRot*(this->progress));
 	}
@@ -95,6 +95,14 @@ private:
 			return true;
 		} else
 			return false;
+	}
+
+	float easeInOutBack(float t,float b , float c, float d) {
+		float sval = 1.70158f;
+		if ((t/=d/2) < 1) 
+			return c/2*(t*t*(((sval*(1.525f))+1)*t - sval*(1.525f))) + b;
+		float postFix = t-=2;
+		return c/2*((postFix)*t*(((sval*(1.525f))+1)*t + sval*(1.525f)) + 2) + b;
 	}
 };
 #endif
