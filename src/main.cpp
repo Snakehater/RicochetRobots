@@ -4,12 +4,22 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+// TileShape
+enum Tile_Shape {
+	SHAPE_DEFAULT,
+	SHAPE_CIRCLE,
+	SHAPE_CROSS,
+	SHAPE_TRIANGLE,
+	SHAPE_SQUARE
+};
+
 // prototype macros
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 int  get_mesh_offset(int* mesh_offsets, int target);
+Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed);
 
 // camera
 Camera camera(glm::vec3(-0.5f, 22.0f, -0.5f), glm::vec3(0.0f, 2.0f, 0.0f), YAW, -89.9f);
@@ -131,9 +141,17 @@ int main() {
 	Animation animation3(temp_mesh, glm::vec3(0.0f, -3.0f, 0.0f));
 
 	AnimationSeq animationSeq;
-	animationSeq.add_animation(&animation);
-	animationSeq.add_animation(&animation2);
-	animationSeq.add_animation(&animation3);
+	animationSeq.add_animation(animation);
+	//animationSeq.add_animation(animation2);
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CIRCLE, 0.01f));
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CROSS, 0.01f));
+	
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
+	
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_TRIANGLE, 0.01f));
+	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_SQUARE, 0.01f));
+	animationSeq.add_animation(animation3);
 
 	animationSeq.set_ticks(0.01f);
 	
@@ -282,25 +300,54 @@ int main() {
 	return 0;
 }
 
+Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed) {
+	float fRot = 0.0f;
+	glm::vec3 vRot = glm::vec3(0.0f, 0.0f, 0.0f);
+	switch(shape) {
+		case SHAPE_DEFAULT:
+			fRot = 0.0f;
+			break;
+		case SHAPE_CIRCLE:
+			fRot = 90.0f;
+			vRot = glm::vec3(1.0f, 0.0f, 0.0f);
+			break;
+		case SHAPE_CROSS:
+			fRot = -90.0f;
+			vRot = glm::vec3(1.0f, 0.0f, 0.0f);
+			break;
+		case SHAPE_TRIANGLE:
+			fRot = 90.0f;
+			vRot = glm::vec3(0.0f, 0.0f, 1.0f);
+			break;
+		case SHAPE_SQUARE:
+			fRot = -90.0f;
+			vRot = glm::vec3(0.0f, 0.0f, 1.0f);
+			break;
+	}
+	return Animation(mesh, vRot, fRot, false);
+}
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.ProcessKeyboard(UP, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera.ProcessKeyboard(DOWN, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		choose_shape(NULL, SHAPE_DEFAULT, 0.01);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
