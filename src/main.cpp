@@ -20,6 +20,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 int  get_mesh_offset(int* mesh_offsets, int target);
 Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed);
+void draw_mesh(Mesh* our_mesh, Shader* ourShader);
 
 // camera
 Camera camera(glm::vec3(-0.5f, 22.0f, -0.5f), glm::vec3(0.0f, 2.0f, 0.0f), YAW, -89.9f);
@@ -30,6 +31,37 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+// world space positions of our cubes
+const int board_map_size = 16;
+float board_map[board_map_size][board_map_size] = {
+	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 5, 1, 1, 3, 1, 1, 1, 1, 1, 1},
+	{1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1},
+	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 4, 1, 5, 1, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1},
+	{1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+	{1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1},
+	{1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1},
+	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+};
+std::vector<glm::vec2> walls;
+
+
+// create robot(s)
+Robot* red_robot;
+
+
+// Animations
+AnimationSeq animationSeq;
+
 
 int main() {
 	// instantiate the GLFW window
@@ -79,26 +111,59 @@ int main() {
 	
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	// world space positions of our cubes
-	int board_map_size = 16;
-	float board_map[board_map_size][board_map_size] = {
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 5, 1, 1, 3, 1, 1, 1, 1, 1, 1},
-		{1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 4, 1, 5, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 2, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	};
+	// fill wall buffer 
+
+
+	walls.push_back(glm::vec2( 4.5f,  0.0f));
+	walls.push_back(glm::vec2(10.5f,  0.0f));
+	walls.push_back(glm::vec2( 6.5f,  1.0f));
+	walls.push_back(glm::vec2( 8.5f,  1.0f));
+	walls.push_back(glm::vec2( 1.0f,  1.5f));
+	walls.push_back(glm::vec2( 6.0f,  1.5f));
+	walls.push_back(glm::vec2( 9.0f,  1.5f));
+	walls.push_back(glm::vec2(14.0f,  1.5f));
+	walls.push_back(glm::vec2( 0.5f,  2.0f));
+	walls.push_back(glm::vec2(14.5f,  2.0f));
+	walls.push_back(glm::vec2(10.5f,  4.0f));
+	walls.push_back(glm::vec2(10.0f,  4.5f));
+	walls.push_back(glm::vec2( 6.0f,  4.5f));
+	walls.push_back(glm::vec2( 0.0f,  5.5f));
+	walls.push_back(glm::vec2( 6.5f,  5.0f));
+	walls.push_back(glm::vec2(12.0f,  5.5f));
+	walls.push_back(glm::vec2( 2.5f,  6.0f));
+	walls.push_back(glm::vec2( 3.0f,  6.5f));
+	walls.push_back(glm::vec2( 7.0f,  6.5f));
+	walls.push_back(glm::vec2( 8.0f,  6.5f));
+	walls.push_back(glm::vec2(12.5f,  6.0f));
+	walls.push_back(glm::vec2( 6.5f,  7.0f));
+	walls.push_back(glm::vec2( 8.5f,  7.0f));
+	walls.push_back(glm::vec2( 6.5f,  8.0f));
+	walls.push_back(glm::vec2( 8.5f,  8.0f));
+	walls.push_back(glm::vec2( 7.0f,  8.5f));
+	walls.push_back(glm::vec2( 8.0f,  8.5f));
+	walls.push_back(glm::vec2( 3.5f,  9.0f));
+	walls.push_back(glm::vec2( 4.0f,  9.5f));
+	walls.push_back(glm::vec2( 6.0f,  9.5f));
+	walls.push_back(glm::vec2(15.0f,  9.5f));
+	walls.push_back(glm::vec2( 0.0f, 10.5f));
+	walls.push_back(glm::vec2( 5.5f, 10.0f));
+	walls.push_back(glm::vec2( 8.0f, 10.5f));
+	walls.push_back(glm::vec2( 8.5f, 10.0f));
+	walls.push_back(glm::vec2(13.0f, 10.5f));
+	walls.push_back(glm::vec2(12.5f, 11.0f));
+	walls.push_back(glm::vec2( 7.0f, 11.5f));
+	walls.push_back(glm::vec2( 7.5f, 12.0f));
+	walls.push_back(glm::vec2( 1.0f, 12.5f));
+	walls.push_back(glm::vec2( 1.5f, 13.0f));
+	walls.push_back(glm::vec2( 8.5f, 13.0f));
+	walls.push_back(glm::vec2( 9.0f, 13.5f));
+	walls.push_back(glm::vec2(14.0f, 13.5f));
+	walls.push_back(glm::vec2( 3.5f, 14.0f));
+	walls.push_back(glm::vec2( 3.0f, 14.5f));
+	walls.push_back(glm::vec2(14.5f, 14.0f));
+	walls.push_back(glm::vec2( 4.5f, 15.0f));
+	walls.push_back(glm::vec2(11.5f, 15.0f));
+
 
 	int vertices_size = 0;
 	int stride_offset_counter = 0;
@@ -110,7 +175,10 @@ int main() {
 	Mesh redCube("res/objects/red_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh greenCube("res/objects/green_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh blueCube("res/objects/blue_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
-	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
+	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt); 
+	delete red_robot;
+	red_robot = new Robot(new Mesh("res/objects/cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
+	
 
 	std::vector<Mesh*> mesh_types;
 	mesh_types.push_back(&nullCube);
@@ -127,20 +195,19 @@ int main() {
 			for (int j = 0; j < board_map_size; j++) {
 				Mesh mesh = *mesh_types[board_map[i][j]];
 				mesh.set_position((float)j-(board_map_size/2), 0.0f, (float)i-(board_map_size/2));
-				mesh.set_rotation_vec(0.0f, 1.0f, 0.0f);
+				mesh.set_vRot(0.0f, 1.0f, 0.0f);
 				map_cubes[cnt] = mesh;
 				cnt++;
 			}
 		}
 	}
-
+	
 	// create animation object to handle animations
 	Mesh* temp_mesh = &map_cubes[22];
 	Animation animation(temp_mesh, glm::vec3(0.0f, 3.0f, 0.0f));
 	Animation animation2(temp_mesh, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 	Animation animation3(temp_mesh, glm::vec3(0.0f, -3.0f, 0.0f));
 
-	AnimationSeq animationSeq;
 	animationSeq.add_animation(animation);
 	//animationSeq.add_animation(animation2);
 	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
@@ -164,6 +231,7 @@ int main() {
 	greenCube.fill_arr(&vertices[0]);
 	blueCube.fill_arr(&vertices[0]);
 	yellowCube.fill_arr(&vertices[0]);
+	red_robot->mesh->fill_arr(&vertices[0]);
 
 	// vertex buffer objects (VBO) 
 	// vertex array object (VAO)
@@ -282,13 +350,10 @@ int main() {
 	//		std::cout << " offset " << our_mesh->offset();
 	//		std::cout << " size " << our_mesh->size() << std::endl;
 			// calculate the model matrix for each object and pass it to shader before drawing
-			glm::mat4 model = glm::mat4( 1.0f );
-			model = glm::translate(model, our_mesh->get_position());
-			//float angle = ( 20.0f * i ) + glfwGetTime();
-			model = glm::rotate( model, glm::radians(our_mesh->rotation_degree), our_mesh->get_rotation_vec() );
-			ourShader.setMat4( "model", model );
-			glDrawArrays( GL_TRIANGLES, our_mesh->stride_offset(), our_mesh->vert_num());
+			draw_mesh(our_mesh, &ourShader);
 		}
+		
+		draw_mesh(red_robot->mesh, &ourShader);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -298,6 +363,15 @@ int main() {
 	}
 	glfwTerminate(); // delete all of GLFW's resources that were allocated
 	return 0;
+}
+
+void draw_mesh(Mesh* our_mesh, Shader* ourShader){
+	glm::mat4 model = glm::mat4( 1.0f );
+	model = glm::translate(model, our_mesh->get_position());
+	//float angle = ( 20.0f * i ) + glfwGetTime();
+	model = glm::rotate( model, glm::radians(our_mesh->rotation_degree), our_mesh->get_vRot() );
+	ourShader->setMat4( "model", model );
+	glDrawArrays( GL_TRIANGLES, our_mesh->stride_offset(), our_mesh->vert_num());
 }
 
 Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed) {
@@ -346,8 +420,11 @@ void processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		choose_shape(NULL, SHAPE_DEFAULT, 0.01);
+
+	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+		if (red_robot->is_available())
+			red_robot->move(glm::vec3(1.0f, 0.0f, 0.0f), &walls);
+	}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

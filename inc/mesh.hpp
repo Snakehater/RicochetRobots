@@ -38,9 +38,9 @@ class Mesh
 	bool mesh_null; // if mesh is empty and acting as 'air' or 'void', passing NULL as filename in constructor causes this
 	int stride_offset_var; // offset to pass to glDrawArrays
 	int arr_offset; // offset in vertices array
-	glm::vec3 position_vec;
-	glm::vec3 rotation_vec;
 public:
+	glm::vec3 vPos;
+	glm::vec3 vRot;
 	float rotation_degree;
 	bool is_null() {
 		return mesh_null;
@@ -55,22 +55,22 @@ public:
 		return this->num_of_vertices;
 	}
 	void set_position(glm::vec3 vec_in) {
-		this->position_vec = vec_in;
+		this->vPos = vec_in;
 	}
 	void set_position(float x, float y, float z) {
-		this->position_vec = glm::vec3(x, y, z);
+		this->vPos = glm::vec3(x, y, z);
 	}
 	glm::vec3 get_position() {
-		return this->position_vec;
+		return this->vPos;
 	}
-	void set_rotation_vec(glm::vec3 vec_in) {
-		this->rotation_vec = vec_in;
+	void set_vRot(glm::vec3 vec_in) {
+		this->vRot = vec_in;
 	}
-	void set_rotation_vec(float x, float y, float z) {
-		this->rotation_vec = glm::vec3(x, y, z);
+	void set_vRot(float x, float y, float z) {
+		this->vRot = glm::vec3(x, y, z);
 	}
-	glm::vec3 get_rotation_vec() {
-		return this->rotation_vec;
+	glm::vec3 get_vRot() {
+		return this->vRot;
 	}
 	std::vector<float> vertex_array_object;
 
@@ -91,7 +91,7 @@ public:
 		readfile(filename, &vertex_array_object);
 		
 		this->vsize = vertex_array_object.size();
-		set_rotation_vec(1.0f, 1.0f, 1.0f);
+		set_vRot(1.0f, 1.0f, 1.0f);
 		rotation_degree = 0.0f;
 
 		if (vertices_size != NULL)

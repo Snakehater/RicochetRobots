@@ -11,8 +11,8 @@ struct ANIMATION_DEFAULTS{
 
 class Animation {
 public:
-	Animation(){ }; // Null constructor
-	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, bool relativeModeIn=true) {
+	Animation(){ this->progress = 2.0f; }; // Null constructor, deletes on next tick call
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	vDeltaPosIn;
 		this->keepRot	=	true;
 		this->keepPos	=	false;
@@ -20,8 +20,9 @@ public:
 		this->targetMesh=	mesh_in;
 		this->progress  =	0.0f;
 		this->relativeMode =	relativeModeIn;
+		this->callbackFlag = callbackFlag_in;
 	}
-	Animation(Mesh* mesh_in, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true) {
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	glm::vec3(0.0f, 0.0f, 0.0f);
 		this->vDeltaRot = 	vDeltaRotIn;
 		this->fDeltaRot = 	fDeltaRotIn;
@@ -31,8 +32,9 @@ public:
 		this->keepRot	=	false;
 		this->keepPos	=	true;
 		this->relativeMode =	relativeModeIn;
+		this->callbackFlag = callbackFlag_in;
 	}
-	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true) {
+	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	vDeltaPosIn;
 		this->vDeltaRot = 	vDeltaRotIn;
 		this->fDeltaRot = 	fDeltaRotIn;
@@ -42,6 +44,7 @@ public:
 		this->keepRot	=	false;
 		this->keepPos	=	false;
 		this->relativeMode =	relativeModeIn;
+		this->callbackFlag = callbackFlag_in;
 	}
 	
 	void set_ticks(float ticks_in) {
@@ -55,15 +58,17 @@ public:
 		this->progress += this->tickSteps;
 		this->normalize(&progress);
 		this->apply_animation();
-		if (this->progress >= 1.0f)
+		if (this->progress >= 1.0f) {
+			if (this->callbackFlag != NULL)
+				*this->callbackFlag = false;
 			return false;
-		else
+		} else
 			return true;
 	}
 	int state = 0;
 	void init() {
 		if(this->keepRot) {
-			this->vDeltaRot = this->targetMesh->get_rotation_vec();
+			this->vDeltaRot = this->targetMesh->get_vRot();
 			this->fDeltaRot = 0;
 		} 
 
@@ -77,11 +82,11 @@ public:
 				  this->cmpFloats(this->vDeltaRot.y, 0.0) && 
 				  this->cmpFloats(this->vDeltaRot.z, 0.0))
 			)
-			this->targetMesh->set_rotation_vec(this->vDeltaRot);
+			this->targetMesh->set_vRot(this->vDeltaRot);
 
 
 		this->vStartPos  = this->targetMesh->get_position();
-//		this->vStartRot  = this->targetMesh->get_rotation_vec();
+//		this->vStartRot  = this->targetMesh->get_vRot();
 		this->fStartRot  = this->targetMesh->rotation_degree;
 		this->state = 1;
 	}
@@ -97,6 +102,7 @@ private:
 	bool keepRot;
 	bool keepPos;
 	bool relativeMode;
+	bool* callbackFlag;
 	
 	glm::vec3 vStartPos;
 	glm::vec3 vStartRot;
@@ -114,7 +120,7 @@ private:
 
 	void apply_animation() {
 		this->targetMesh->set_position(this->vStartPos + (this->vDeltaPos*easeInOutBack(this->progress, 0, 1, 1)));
-//		this->targetMesh->set_rotation_vec(this->vStartRot + (this->vDeltaRot*(this->progress)));
+//		this->targetMesh->set_vRot(this->vStartRot + (this->vDeltaRot*(this->progress)));
 		this->targetMesh->rotation_degree = this->fStartRot + (this->fDeltaRot*(this->progress));
 	}
 
