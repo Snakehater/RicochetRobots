@@ -23,7 +23,7 @@ Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed);
 void draw_mesh(Mesh* our_mesh, Shader* ourShader);
 
 // camera
-Camera camera(glm::vec3(-0.5f, 22.0f, -0.5f), glm::vec3(0.0f, 2.0f, 0.0f), YAW, -89.9f);
+Camera camera(glm::vec3(7.5f, 22.0f, 7.5f), glm::vec3(0.0f, 2.0f, 0.0f), YAW, -89.9f);
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -177,8 +177,9 @@ int main() {
 	Mesh blueCube("res/objects/blue_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt); 
 	delete red_robot;
-	red_robot = new Robot(new Mesh("res/objects/cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
+	red_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
 	
+	red_robot->mesh->set_position(3.0f, 1.0f, 0.0f);
 
 	std::vector<Mesh*> mesh_types;
 	mesh_types.push_back(&nullCube);
@@ -194,7 +195,7 @@ int main() {
 		for (int i = 0; i < board_map_size; i++) {
 			for (int j = 0; j < board_map_size; j++) {
 				Mesh mesh = *mesh_types[board_map[i][j]];
-				mesh.set_position((float)j-(board_map_size/2), 0.0f, (float)i-(board_map_size/2));
+				mesh.set_position((float)j, 0.0f, (float)i);
 				mesh.set_vRot(0.0f, 1.0f, 0.0f);
 				map_cubes[cnt] = mesh;
 				cnt++;
@@ -210,7 +211,7 @@ int main() {
 
 	animationSeq.add_animation(animation);
 	//animationSeq.add_animation(animation2);
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
+	/*animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
 	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CIRCLE, 0.01f));
 	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CROSS, 0.01f));
 	
@@ -218,7 +219,7 @@ int main() {
 	
 	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_TRIANGLE, 0.01f));
 	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_SQUARE, 0.01f));
-	animationSeq.add_animation(animation3);
+	*/animationSeq.add_animation(animation3);
 
 	animationSeq.set_ticks(0.01f);
 	
@@ -421,9 +422,21 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 
-	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		if (red_robot->is_available())
-			red_robot->move(glm::vec3(1.0f, 0.0f, 0.0f), &walls);
+			animationSeq.add_animation(red_robot->move(glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size));
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		if (red_robot->is_available())
+			animationSeq.add_animation(red_robot->move(glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size));
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		if (red_robot->is_available())
+			animationSeq.add_animation(red_robot->move(glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size));
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		if (red_robot->is_available())
+			animationSeq.add_animation(red_robot->move(glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size));
 	}
 }
 

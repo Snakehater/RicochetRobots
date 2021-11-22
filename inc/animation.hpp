@@ -11,7 +11,18 @@ struct ANIMATION_DEFAULTS{
 
 class Animation {
 public:
-	Animation(){ this->progress = 2.0f; }; // Null constructor, deletes on next tick call
+	Animation(){ 
+		this->vDeltaPos = 	glm::vec3(0.0f, 0.0f, 0.0f);
+		this->keepRot	=	true;
+		this->keepPos	=	false;
+		this->tickSteps = 	animation_defaults.steps;
+		this->targetMesh=	NULL;
+		this->progress  =	0.0f;
+		this->relativeMode =	false;
+		this->callbackFlag = 	NULL;
+		
+	}; // Null constructor, deletes on next tick call
+	// only for pos
 	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	vDeltaPosIn;
 		this->keepRot	=	true;
@@ -22,6 +33,7 @@ public:
 		this->relativeMode =	relativeModeIn;
 		this->callbackFlag = callbackFlag_in;
 	}
+	// only for rot
 	Animation(Mesh* mesh_in, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	glm::vec3(0.0f, 0.0f, 0.0f);
 		this->vDeltaRot = 	vDeltaRotIn;
@@ -34,6 +46,7 @@ public:
 		this->relativeMode =	relativeModeIn;
 		this->callbackFlag = callbackFlag_in;
 	}
+	// both rot and pos
 	Animation(Mesh* mesh_in, glm::vec3 vDeltaPosIn, glm::vec3 vDeltaRotIn, float fDeltaRotIn, bool relativeModeIn=true, bool* callbackFlag_in=NULL) {
 		this->vDeltaPos = 	vDeltaPosIn;
 		this->vDeltaRot = 	vDeltaRotIn;
@@ -54,6 +67,7 @@ public:
 	bool tick() {
 		if (this->state != 1) {
 			std::cout << "ERROR::ANIMATION::NOT_INITIATED" << std::endl;
+			return false;
 		}
 		this->progress += this->tickSteps;
 		this->normalize(&progress);
@@ -67,6 +81,8 @@ public:
 	}
 	int state = 0;
 	void init() {
+		if (this->targetMesh == NULL)
+			return;
 		if(this->keepRot) {
 			this->vDeltaRot = this->targetMesh->get_vRot();
 			this->fDeltaRot = 0;
@@ -115,10 +131,12 @@ private:
 	bool cmpFloats(float a, float b) {
 		float EPSILON = 0.005;
 		float diff = a-b;
-		return (diff < EPSILON) && (diff < EPSILON);
+		return (diff < EPSILON) && (-diff < EPSILON);
 	}
 
 	void apply_animation() {
+		if (this->targetMesh == NULL)
+			return;
 		this->targetMesh->set_position(this->vStartPos + (this->vDeltaPos*easeInOutBack(this->progress, 0, 1, 1)));
 //		this->targetMesh->set_vRot(this->vStartRot + (this->vDeltaRot*(this->progress)));
 		this->targetMesh->rotation_degree = this->fStartRot + (this->fDeltaRot*(this->progress));

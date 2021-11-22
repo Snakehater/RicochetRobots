@@ -107,6 +107,8 @@ public:
 			*arr_offset_cnt += vertex_array_object.size();
 		} else
 			this->arr_offset = 0;
+		
+		this->vPos = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 	void readfile(const char* filename, std::vector<float>* output);
 	void fill_arr(float* output, int start);
