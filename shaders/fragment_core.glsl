@@ -2,11 +2,16 @@
 out vec4 FragColor;
 
 in vec2 TexCoord;
+flat in int  specialColorEn_out;
+in vec4 vCol_out;
 
 // sampler2D holds texture id that we have assigned with glUniform1i and activated with glActiveTexture in main.cpp
 uniform sampler2D ourTexture;
 
 void main()
 {
-	FragColor = texture( ourTexture, TexCoord );
+	if (specialColorEn_out == 0)
+		FragColor = texture( ourTexture, TexCoord );
+	else
+		FragColor = vCol_out;
 }

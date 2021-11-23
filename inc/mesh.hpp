@@ -39,9 +39,15 @@ class Mesh
 	int stride_offset_var; // offset to pass to glDrawArrays
 	int arr_offset; // offset in vertices array
 public:
+	bool specialColorEn;
+	glm::vec4 vCol;
 	glm::vec3 vPos;
 	glm::vec3 vRot;
 	float rotation_degree;
+	void setSpecialColor(float r, float g, float b, float a) {
+		this->vCol = glm::vec4(r, g, b, a);
+		this->specialColorEn = true;
+	}
 	bool is_null() {
 		return mesh_null;
 	}
@@ -84,6 +90,8 @@ public:
 			return;
 		} else
 			this->mesh_null = false;
+		this->specialColorEn = false;
+		this->vCol = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		this->num_of_vertices = 0;
 		this->scale = scale_in;
 

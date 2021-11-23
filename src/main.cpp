@@ -20,7 +20,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 int  get_mesh_offset(int* mesh_offsets, int target);
 Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed);
-void draw_mesh(Mesh* our_mesh, Shader* ourShader);
+void draw_mesh(Mesh* our_mesh, Shader* ourShader, int ignoreMatrix = 0);
+void character_callback(GLFWwindow* window, unsigned int codepoint);
 
 // camera
 Camera camera(glm::vec3(7.5f, 22.0f, 7.5f), glm::vec3(0.0f, 2.0f, 0.0f), YAW, -89.9f);
@@ -62,6 +63,8 @@ std::vector<Robot*> robots;
 // Animations
 AnimationSeq animationSeq;
 
+// Create commandprompt
+CommandBuffer* commandBuffer;
 
 int main() {
 	// instantiate the GLFW window
@@ -103,7 +106,9 @@ int main() {
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST); // this removes fragments that are behind other fragments
-	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// build and compile our shader program
 	// ------------------------------------
 	// we first try to load shaders from files
@@ -177,7 +182,14 @@ int main() {
 	Mesh blueCube("res/objects/blue_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt); 
 	Mesh wall("res/objects/wall.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
+	delete commandBuffer;
+	commandBuffer = new CommandBuffer(new Mesh("res/objects/command_prompt.obj", 1.0f, &vertices_size, &stride_offset_counter, &arr_offset_cnt), new Game(), &camera);
 
+
+	// parameters for command buffer
+	commandBuffer->mesh->vPos = glm::vec3(0.0f, 3.0f, 0.0f);
+
+	// robot stuff
 	robots.push_back(new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt)));
 	robots.push_back(new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt)));
 	robots.push_back(new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt)));
@@ -187,6 +199,8 @@ int main() {
 	robots[1]->mesh->set_position(3.0f, 1.0f, 5.0f);
 	robots[2]->mesh->set_position(14.0f, 1.0f, 6.0f);
 	robots[3]->mesh->set_position(0.0f, 1.0f, 4.0f);
+
+	// create mesh types for board map
 
 	std::vector<Mesh*> mesh_types;
 	mesh_types.push_back(&nullCube);
@@ -209,8 +223,9 @@ int main() {
 			}
 		}
 	}
+
+	// fill array
 	
-	//float* vertices = &mesh.vertex_array_object[0];
 	float vertices[vertices_size] = { };
 
 	regular_cube.fill_arr(&vertices[0]);
@@ -221,6 +236,9 @@ int main() {
 	for (long unsigned int i = 0; i < robots.size(); i++)
 		robots[i]->mesh->fill_arr(&vertices[0]);
 	wall.fill_arr(&vertices[0]);
+	commandBuffer->mesh->fill_arr(&vertices[0]);
+	
+	//////////////////// opengl magic /////////////////////
 
 	// vertex buffer objects (VBO) 
 	// vertex array object (VAO)
@@ -359,10 +377,14 @@ int main() {
 		}
 		for (long unsigned int i = 0; i < robots.size(); i++)		
 			draw_mesh(robots[i]->mesh, &ourShader);
+		
+		if(commandBuffer->enabled)
+			draw_mesh(commandBuffer->mesh, &ourShader, true);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window); 
+		commandBuffer->update(window); // this needs to come before polling events
 		glfwPollEvents();
 		usleep( 1 );
 	}
@@ -370,12 +392,15 @@ int main() {
 	return 0;
 }
 
-void draw_mesh(Mesh* our_mesh, Shader* ourShader){
+void draw_mesh(Mesh* our_mesh, Shader* ourShader, int ignoreMatrix){
 	glm::mat4 model = glm::mat4( 1.0f );
 	model = glm::translate(model, our_mesh->get_position());
 	//float angle = ( 20.0f * i ) + glfwGetTime();
 	model = glm::rotate( model, glm::radians(our_mesh->rotation_degree), our_mesh->get_vRot() );
-	ourShader->setMat4( "model", model );
+	ourShader->setMat4("model", model);
+	ourShader->setInt("ignoreMatrix", ignoreMatrix);
+	ourShader->setInt("specialColorEn", (our_mesh->specialColorEn ? 1 : 0));
+	ourShader->setVec4("vCol", our_mesh->vCol);
 	glDrawArrays( GL_TRIANGLES, our_mesh->stride_offset(), our_mesh->vert_num());
 }
 
@@ -425,6 +450,9 @@ void processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+		commandBuffer->enable();
+	
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		if (robots[0]->is_available())
