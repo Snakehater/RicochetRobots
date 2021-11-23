@@ -22,7 +22,7 @@ public:
 		delete mesh;
 	}
 
-	Animation move(glm::vec3 direction, std::vector<glm::vec2>* walls, int board_size) {
+	Animation move(AnimationSeq* animationSeq, glm::vec3 direction, std::vector<glm::vec2>* walls, int board_size) {
 		if (abs(direction.x) + abs(direction.y) + abs(direction.z) != 1) {
 			std::cout << "ERROR:ROBOT:INVALID_MOVE_DIRECTION" << std::endl;
 			return Animation();
@@ -32,11 +32,21 @@ public:
 			return Animation();
 		
 		glm::vec3 deltaPos = calc_collPos(direction, this->mesh->get_position(), walls, board_size);
-
-		Animation animation(mesh, deltaPos, true, &this->move_debounce);
-		animation.set_ticks(0.025f);
+		
+		// this will be the main animation
+		Animation animation(mesh, deltaPos, true);
+		animation.set_ticks(0.05f);
 
 		this->move_debounce = true;
+		
+		// also set the raise and lower animations to make a better transition for moving
+		Animation raise(this->mesh, glm::vec3(0.0f, 1.0f, 0.0f), true);
+		Animation lower(this->mesh, glm::vec3(0.0f, -1.0f, 0.0f), true, &this->move_debounce);
+		
+		animationSeq->add_animation(raise);
+		animationSeq->add_animation(animation);
+		animationSeq->add_animation(lower);
+		animationSeq->set_ticks(0.05f); // set ticks on all animations
 		return animation;
 	}
 	bool is_available() {

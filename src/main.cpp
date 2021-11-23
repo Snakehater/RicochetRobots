@@ -176,6 +176,8 @@ int main() {
 	Mesh greenCube("res/objects/green_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh blueCube("res/objects/blue_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt); 
+	Mesh wall("res/objects/wall.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
+
 	delete red_robot;
 	red_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
 	
@@ -203,27 +205,6 @@ int main() {
 		}
 	}
 	
-	// create animation object to handle animations
-	Mesh* temp_mesh = &map_cubes[22];
-	Animation animation(temp_mesh, glm::vec3(0.0f, 3.0f, 0.0f));
-	Animation animation2(temp_mesh, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
-	Animation animation3(temp_mesh, glm::vec3(0.0f, -3.0f, 0.0f));
-
-	animationSeq.add_animation(animation);
-	//animationSeq.add_animation(animation2);
-	/*animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CIRCLE, 0.01f));
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_CROSS, 0.01f));
-	
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_DEFAULT, 0.01f));
-	
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_TRIANGLE, 0.01f));
-	animationSeq.add_animation(choose_shape(temp_mesh, SHAPE_SQUARE, 0.01f));
-	*/animationSeq.add_animation(animation3);
-
-	animationSeq.set_ticks(0.01f);
-	
-
 	//float* vertices = &mesh.vertex_array_object[0];
 	float vertices[vertices_size] = { };
 
@@ -233,6 +214,7 @@ int main() {
 	blueCube.fill_arr(&vertices[0]);
 	yellowCube.fill_arr(&vertices[0]);
 	red_robot->mesh->fill_arr(&vertices[0]);
+	wall.fill_arr(&vertices[0]);
 
 	// vertex buffer objects (VBO) 
 	// vertex array object (VAO)
@@ -353,6 +335,22 @@ int main() {
 			// calculate the model matrix for each object and pass it to shader before drawing
 			draw_mesh(our_mesh, &ourShader);
 		}
+
+		for (long unsigned int i = 0; i < walls.size(); i++) {
+			wall.vPos.x = walls[i].x;
+			wall.vPos.y = 1.0f;
+			wall.vPos.z = walls[i].y;
+
+			if (walls[i].x == (int)walls[i].x) {
+				wall.vRot = glm::vec3(0.0f, 1.0f, 0.0f);
+				wall.rotation_degree = 90.0f;
+			} else {
+				wall.vRot = glm::vec3(0.0f, 1.0f, 0.0f);
+				wall.rotation_degree = 0.0f;
+			}
+
+			draw_mesh(&wall, &ourShader);
+		}
 		
 		draw_mesh(red_robot->mesh, &ourShader);
 
@@ -424,19 +422,19 @@ void processInput(GLFWwindow *window)
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		if (red_robot->is_available())
-			animationSeq.add_animation(red_robot->move(glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size));
+			red_robot->move(&animationSeq, glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size);
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		if (red_robot->is_available())
-			animationSeq.add_animation(red_robot->move(glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size));
+			red_robot->move(&animationSeq, glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size);
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		if (red_robot->is_available())
-			animationSeq.add_animation(red_robot->move(glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size));
+			red_robot->move(&animationSeq, glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		if (red_robot->is_available())
-			animationSeq.add_animation(red_robot->move(glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size));
+			red_robot->move(&animationSeq, glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size);
 	}
 }
 

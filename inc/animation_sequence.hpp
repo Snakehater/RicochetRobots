@@ -18,10 +18,10 @@ public:
 	}
 
 	bool tick() {
-		if (this->animations[0].state == 0)
-			this->animations[0].init();
 		if (this->animations.size() == 0)
 			return false;
+		if (this->animations[0].state == 0)
+			this->animations[0].init();
 		if (!this->animations[0].tick())
 			this->animations.erase(animations.begin());
 		return true;
