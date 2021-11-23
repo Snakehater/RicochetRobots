@@ -138,14 +138,14 @@ void Mesh::readfile(const char *filename, std::vector<float>* output) {
 			v.x = std::stof(vertex_raw[1]) * scale;
 			v.y = std::stof(vertex_raw[2]) * scale;
 			v.z = std::stof(vertex_raw[3]) * scale;
-			std::cout << v.x << ' ' << v.y << ' ' << v.z << std::endl;
+//			std::cout << v.x << ' ' << v.y << ' ' << v.z << std::endl;
 			vertices.push_back(v);
 		} else if (strcmp(ctrl_id, "vt") == 0) {
 			uv u;
 			std::vector<std::string> uv_raw = this->split(tmp, " ");
 			u.u = std::stof(uv_raw[1]);
 			u.v = std::stof(uv_raw[2]);
-			std::cout << u.u << ' ' << u.v << std::endl;
+//			std::cout << u.u << ' ' << u.v << std::endl;
 			uvs.push_back(u);
 		} else if (strcmp(ctrl_id, "f ") == 0) {
 			this->num_of_vertices += 3;
@@ -155,7 +155,7 @@ void Mesh::readfile(const char *filename, std::vector<float>* output) {
 			f.a = this->split(face_raw[1], "/");
 			f.b = this->split(face_raw[2], "/");
 			f.c = this->split(face_raw[3], "/");
-			std::cout << face_raw[1] << ' ' << face_raw[2] << ' ' << face_raw[3] << std::endl;
+//			std::cout << face_raw[1] << ' ' << face_raw[2] << ' ' << face_raw[3] << std::endl;
 			// prep failsafe
 			uv failsafe;
 			failsafe.u = 0; failsafe.v = 0;
