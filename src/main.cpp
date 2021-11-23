@@ -57,6 +57,9 @@ std::vector<glm::vec2> walls;
 
 // create robot(s)
 Robot* red_robot;
+Robot* green_robot;
+Robot* blue_robot;
+Robot* yellow_robot;
 
 
 // Animations
@@ -179,9 +182,18 @@ int main() {
 	Mesh wall("res/objects/wall.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 
 	delete red_robot;
+	delete green_robot;
+	delete blue_robot;
+	delete yellow_robot;
 	red_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
+	green_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
+	blue_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
+	yellow_robot = new Robot(new Mesh("res/objects/robot.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt));
 	
-	red_robot->mesh->set_position(3.0f, 1.0f, 0.0f);
+	red_robot->mesh->set_position(11.0f, 1.0f, 7.0f);
+	green_robot->mesh->set_position(3.0f, 1.0f, 5.0f);
+	blue_robot->mesh->set_position(14.0f, 1.0f, 6.0f);
+	yellow_robot->mesh->set_position(0.0f, 1.0f, 4.0f);
 
 	std::vector<Mesh*> mesh_types;
 	mesh_types.push_back(&nullCube);
@@ -214,6 +226,9 @@ int main() {
 	blueCube.fill_arr(&vertices[0]);
 	yellowCube.fill_arr(&vertices[0]);
 	red_robot->mesh->fill_arr(&vertices[0]);
+	green_robot->mesh->fill_arr(&vertices[0]);
+	blue_robot->mesh->fill_arr(&vertices[0]);
+	yellow_robot->mesh->fill_arr(&vertices[0]);
 	wall.fill_arr(&vertices[0]);
 
 	// vertex buffer objects (VBO) 
@@ -353,6 +368,9 @@ int main() {
 		}
 		
 		draw_mesh(red_robot->mesh, &ourShader);
+		draw_mesh(green_robot->mesh, &ourShader);
+		draw_mesh(blue_robot->mesh, &ourShader);
+		draw_mesh(yellow_robot->mesh, &ourShader);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
