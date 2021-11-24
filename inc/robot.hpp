@@ -22,7 +22,7 @@ public:
 		delete mesh;
 	}
 
-	Animation move(AnimationSeq* animationSeq, glm::vec3 direction, std::vector<glm::vec2>* walls, int board_size) {
+	Animation move(AnimationSeq* animationSeq, glm::vec3 direction, std::vector<glm::vec2>* walls, int board_size, std::vector<Robot*>* robots) {
 		if (abs(direction.x) + abs(direction.y) + abs(direction.z) != 1) {
 			std::cout << "ERROR:ROBOT:INVALID_MOVE_DIRECTION" << std::endl;
 			return Animation();
@@ -31,7 +31,7 @@ public:
 		if (this->move_debounce)
 			return Animation();
 		
-		glm::vec3 deltaPos = calc_collPos(direction, this->mesh->get_position(), walls, board_size);
+		glm::vec3 deltaPos = calc_collPos(direction, this->mesh->get_position(), walls, board_size, robots);
 		
 		// this will be the main animation
 		Animation animation(mesh, deltaPos, true);
@@ -59,7 +59,7 @@ private:
 		float diff = a-b;
 		return (diff < EPSILON) && (-diff < EPSILON);
 	}
-	glm::vec3 calc_collPos(glm::vec3 direction, glm::vec3 posIn, std::vector<glm::vec2>* walls, int board_size) {
+	glm::vec3 calc_collPos(glm::vec3 direction, glm::vec3 posIn, std::vector<glm::vec2>* walls, int board_size, std::vector<Robot*>* robots) {
 		glm::vec2 dir2D = glm::vec2(direction.x, direction.z);
 		glm::vec2 pos = glm::vec2(posIn.x, posIn.z);
 		glm::vec2 last_pos = glm::vec2(0.0f, 0.0f);
@@ -69,6 +69,18 @@ private:
 		// this will set last_pos to the the position in the dimention that we got after multiplying vector posIn with direction
 		// and then move in the direction of dir2D until it moves into a wall
 		for (last_pos = pos; last_pos.x < board_size && last_pos.y < board_size && last_pos.x >= 0 && last_pos.y >= 0; last_pos += dir2D) {
+			if (last_pos != pos) {
+				for (long unsigned int i = 0; i < robots->size(); i++) {
+					Robot* eachRobot = (*robots)[i];
+					glm::vec2 robotpos = glm::vec2(eachRobot->mesh->vPos.x, eachRobot->mesh->vPos.z);
+					if (	this->cmpFloats(last_pos.x, robotpos.x) && 
+						this->cmpFloats(last_pos.y, robotpos.y)) {
+						last_pos -= dir2D; // we will stop the detection when we are ON a wall or robot, so we need to go back one when hitting another robot
+						goto collision_detected;
+					}
+				}
+			}
+
 			glm::vec2 checkPos = 
 				(last_pos) + 
 				(glm::vec2(0.5f, 0.5f) * dir2D);

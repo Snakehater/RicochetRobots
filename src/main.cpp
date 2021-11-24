@@ -456,19 +456,19 @@ void processInput(GLFWwindow *window)
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size);
+			robots[0]->move(&animationSeq, glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size);
+			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size, &robots);
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size);
+			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size, &robots);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size);
+			robots[0]->move(&animationSeq, glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
 	}
 }
 
