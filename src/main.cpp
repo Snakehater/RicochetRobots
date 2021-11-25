@@ -2,7 +2,7 @@
 
 // settings
 const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_HEIGHT = 800;
 
 // TileShape
 enum Tile_Shape {
@@ -84,7 +84,7 @@ int main() {
 	std::cout << glfwGetVersionString() << std::endl;
 
 	// create a window object
-	GLFWwindow* window = glfwCreateWindow(800, 600, "RicochetRobots", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "RicochetRobots", NULL, NULL);
 	if (window == NULL) {
 	    std::cout << "Failed to create GLFW window" << std::endl;
 	    glfwTerminate();
@@ -99,7 +99,7 @@ int main() {
 	    return -1;
 	}
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -186,6 +186,7 @@ int main() {
 	Mesh wall("res/objects/wall.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	delete commandBuffer;
 	commandBuffer = new CommandBuffer(new Mesh("res/objects/command_prompt.obj", 1.0f, &vertices_size, &stride_offset_counter, &arr_offset_cnt), new Game(), &camera);
+	Mesh crosshair("res/objects/crosshair.obj", 0.02f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 
 
 	// parameters for command buffer
@@ -239,6 +240,7 @@ int main() {
 		robots[i]->mesh->fill_arr(&vertices[0]);
 	wall.fill_arr(&vertices[0]);
 	commandBuffer->mesh->fill_arr(&vertices[0]);
+	crosshair.fill_arr(&vertices[0]);
 	
 	//////////////////// opengl magic /////////////////////
 
@@ -383,6 +385,8 @@ int main() {
 		if(commandBuffer->enabled){
 			draw_mesh(commandBuffer->mesh, &ourShader, true);
 		}
+
+		draw_mesh(&crosshair, &ourShader, true);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
