@@ -12,6 +12,8 @@ void main()
 {
 	if (specialColorEn_out == 0)
 		FragColor = texture( ourTexture, TexCoord );
-	else
+	else if (specialColorEn_out == 1)
 		FragColor = vCol_out;
+	else
+		FragColor = mix(texture(ourTexture, TexCoord), vCol_out, 0.5);
 }

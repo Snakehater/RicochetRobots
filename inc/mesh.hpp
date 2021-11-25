@@ -39,7 +39,7 @@ class Mesh
 	int stride_offset_var; // offset to pass to glDrawArrays
 	int arr_offset; // offset in vertices array
 public:
-	bool specialColorEn;
+	int specialColorEn;
 	glm::vec4 vCol;
 	glm::vec3 vPos;
 	glm::vec3 vRot;

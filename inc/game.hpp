@@ -8,6 +8,9 @@
 
 class Game {
 public:
-	Game(){ }; // Null constructor
+	int selectedRobot;
+	Game(){
+		selectedRobot = -1;
+	}; // Null constructor
 };
 #endif

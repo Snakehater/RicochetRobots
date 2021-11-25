@@ -16,6 +16,7 @@ enum Tile_Shape {
 // prototype macros
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 int  get_mesh_offset(int* mesh_offsets, int target);
@@ -55,6 +56,8 @@ float board_map[board_map_size][board_map_size] = {
 };
 std::vector<glm::vec2> walls;
 
+// Game
+Game game;
 
 // create robot(s)
 std::vector<Robot*> robots;
@@ -104,7 +107,8 @@ int main() {
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-	
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST); // this removes fragments that are behind other fragments
@@ -185,7 +189,7 @@ int main() {
 	Mesh yellowCube("res/objects/yellow_cube.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt); 
 	Mesh wall("res/objects/wall.obj", 0.5f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 	delete commandBuffer;
-	commandBuffer = new CommandBuffer(new Mesh("res/objects/command_prompt.obj", 1.0f, &vertices_size, &stride_offset_counter, &arr_offset_cnt), new Game(), &camera);
+	commandBuffer = new CommandBuffer(new Mesh("res/objects/command_prompt.obj", 1.0f, &vertices_size, &stride_offset_counter, &arr_offset_cnt), &game, &camera);
 	Mesh crosshair("res/objects/crosshair.obj", 0.02f, &vertices_size, &stride_offset_counter, &arr_offset_cnt);
 
 
@@ -379,8 +383,15 @@ int main() {
 
 			draw_mesh(&wall, &ourShader);
 		}
-		for (long unsigned int i = 0; i < robots.size(); i++)		
+		for (long unsigned int i = 0; i < robots.size(); i++) {	
+			if (i == (long unsigned int)game.selectedRobot) {
+				robots[i]->mesh->vCol = glm::vec4(255, 0, 0, 1);
+				robots[i]->mesh->specialColorEn = -1;
+			} else
+				robots[i]->mesh->specialColorEn = 0;
 			draw_mesh(robots[i]->mesh, &ourShader);
+
+		}
 		
 		if(commandBuffer->enabled){
 			draw_mesh(commandBuffer->mesh, &ourShader, true);
@@ -399,14 +410,14 @@ int main() {
 	return 0;
 }
 
-void draw_mesh(Mesh* our_mesh, Shader* ourShader, int ignoreMatrix){
+void draw_mesh(Mesh* our_mesh, Shader* ourShader, int ignoreMatrix/*=0*/){
 	glm::mat4 model = glm::mat4( 1.0f );
 	model = glm::translate(model, our_mesh->get_position());
 	//float angle = ( 20.0f * i ) + glfwGetTime();
 	model = glm::rotate( model, glm::radians(our_mesh->rotation_degree), our_mesh->get_vRot() );
 	ourShader->setMat4("model", model);
 	ourShader->setInt("ignoreMatrix", ignoreMatrix);
-	ourShader->setInt("specialColorEn", (our_mesh->specialColorEn ? 1 : 0));
+	ourShader->setInt("specialColorEn", our_mesh->specialColorEn);
 	ourShader->setVec4("vCol", our_mesh->vCol);
 	glDrawArrays( GL_TRIANGLES, our_mesh->stride_offset(), our_mesh->vert_num());
 }
@@ -440,7 +451,6 @@ Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed) {
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-bool debounce = false;
 void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -460,29 +470,24 @@ void processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
 		commandBuffer->enable();
-	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-		if (!debounce)
-			std::cout << rayCaster.cast(0, 0, &camera, &robots) << std::endl;
-		debounce = true;
-	} else
-		debounce = false;
 	
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
-	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size, &robots);
-	}
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size, &robots);
-	}
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		if (robots[0]->is_available())
-			robots[0]->move(&animationSeq, glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
+	if (game.selectedRobot >= 0) {
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			if (robots[game.selectedRobot]->is_available())
+				robots[game.selectedRobot]->move(&animationSeq, glm::vec3(-1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			if (robots[game.selectedRobot]->is_available())
+				robots[game.selectedRobot]->move(&animationSeq, glm::vec3(0.0f, 0.0f, 1.0f), &walls, board_map_size, &robots);
+		}
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			if (robots[game.selectedRobot]->is_available())
+				robots[game.selectedRobot]->move(&animationSeq, glm::vec3(0.0f, 0.0f, -1.0f), &walls, board_map_size, &robots);
+		}
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			if (robots[game.selectedRobot]->is_available())
+				robots[game.selectedRobot]->move(&animationSeq, glm::vec3(1.0f, 0.0f, 0.0f), &walls, board_map_size, &robots);
+		}
 	}
 }
 
@@ -515,7 +520,18 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
-
+// glfw: whenever a mouse button is clicked, this callback is called
+// -----------------------------------------------------------------
+bool mouseDebounceLeft = false;
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		if (!mouseDebounceLeft)
+			game.selectedRobot = rayCaster.cast(0, 0, &camera, &robots);
+		mouseDebounceLeft = true;
+	} else
+			mouseDebounceLeft = false;
+}
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
