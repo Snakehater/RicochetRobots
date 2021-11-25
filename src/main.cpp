@@ -59,12 +59,14 @@ std::vector<glm::vec2> walls;
 // create robot(s)
 std::vector<Robot*> robots;
 
-
 // Animations
 AnimationSeq animationSeq;
 
 // Create commandprompt
 CommandBuffer* commandBuffer;
+
+// Ray Caster
+RayCaster rayCaster;
 
 int main() {
 	// instantiate the GLFW window
@@ -378,8 +380,9 @@ int main() {
 		for (long unsigned int i = 0; i < robots.size(); i++)		
 			draw_mesh(robots[i]->mesh, &ourShader);
 		
-		if(commandBuffer->enabled)
+		if(commandBuffer->enabled){
 			draw_mesh(commandBuffer->mesh, &ourShader, true);
+		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -433,6 +436,7 @@ Animation choose_shape(Mesh* mesh, enum Tile_Shape shape, float speed) {
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
+bool debounce = false;
 void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -452,6 +456,12 @@ void processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
 		commandBuffer->enable();
+	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+		if (!debounce)
+			std::cout << rayCaster.cast(0, 0, &camera, &robots) << std::endl;
+		debounce = true;
+	} else
+		debounce = false;
 	
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {

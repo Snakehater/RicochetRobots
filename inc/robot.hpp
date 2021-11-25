@@ -52,6 +52,14 @@ public:
 	bool is_available() {
 		return !this->move_debounce;
 	}
+	glm::vec3* getHitBox(){
+		glm::vec3 hitpoint1 = glm::vec3(this->mesh->vPos + glm::vec3(-0.5f, -0.5f, -0.5f));
+		glm::vec3 hitpoint2 = glm::vec3(this->mesh->vPos + glm::vec3( 0.5f,  1.5f,  0.5f));
+		glm::vec3* output = new glm::vec3[2];
+		output[0] = hitpoint1;
+		output[1] = hitpoint2;
+		return &output[0];
+	}
 private:
 	bool move_debounce;
 	bool cmpFloats(float a, float b) {
