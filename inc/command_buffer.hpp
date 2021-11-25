@@ -38,8 +38,7 @@ public:
 	void handle_command(std::string command, GLFWwindow* window) {
 		if (command.length() == 0)
 			return;
-		command.erase(0, 1);
-		if (strcmp(command.c_str(), "exit"))
+		if (strcmp(command.c_str(), "exit") == 0)
 			glfwSetWindowShouldClose(window, true);
 //		else if (strcmp(command, "lock"))
 //			camera->lock();
